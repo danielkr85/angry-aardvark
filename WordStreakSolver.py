@@ -1,5 +1,8 @@
-import itertools as it,pdb
+import itertools as it,pdb,copy
 
+# import WordStreakSolver as app
+# mypuzzle = app.createpuzzlemap('acbrthenefdtbrjs')
+# mytracker = app.createstring(mypuzzle,(1,1))
 
 def createstringcombinations(puzzlemap):
 
@@ -10,7 +13,7 @@ def createstringcombinations(puzzlemap):
 	return stringcombinations
 
 
-def createstring(puzzlemap,coords,startpoint):
+def createstring(puzzlemap,startpoint):
 
 # a	c	b	r
 
@@ -21,8 +24,33 @@ def createstring(puzzlemap,coords,startpoint):
 # b	r	j	s
 
 # acbrthenefdtbrjs
-
 	
+	#tracker = {step:[string,puzzlemap]}
+
+	step = 1
+	letter = puzzlemap[startpoint].keys()[0]
+	tracker={step:[letter,startpoint,removefromadjacentcells(puzzlemap,startpoint)]}
+	iterator = tracker.keys()
+	for item in iterator:
+		string = tracker[item][0]
+		startpoint = tracker[item][1]
+		puzzle = tracker[item][2]
+		for coord in puzzle[startpoint][string[-1]]:
+			step+=1
+			iterator.append(step)
+			puzzlecopy = removefromadjacentcells(puzzle,coord)
+			nextletter = puzzlecopy[coord].keys()[0]
+			tracker[step]=[string+nextletter,coord,puzzlecopy]
+			print(string+nextletter)
+	return tracker
+
+def removefromadjacentcells(puzzlemap,coordtoremove):
+
+	puzzlecopy = copy.deepcopy(puzzlemap)
+	for cell in puzzlemap:
+		for letter in puzzlemap[cell]:
+			if coordtoremove in puzzlecopy[cell][letter]: puzzlecopy[cell][letter].remove(coordtoremove)
+	return puzzlecopy			
 
 
 def createpuzzlemap(string):
