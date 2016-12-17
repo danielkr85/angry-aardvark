@@ -1,48 +1,53 @@
-import itertools as it,pdb,copy
+import itertools as it,pdb,copy,io
 
-# import WordStreakSolver as app
-# mypuzzle = app.createpuzzlemap('acbrthenefdtbrjs')
-# mytracker = app.createstring(mypuzzle,(1,1))
+def solution(string):
+
+	return createstringcombinations(createpuzzlemap(string))
 
 def createstringcombinations(puzzlemap):
 
+	print('Reading Dictionary')
+
+	dictionary=[]
+	fp = open('dictionary.txt')
+	for line in fp:
+		dictionary.append(line.strip('\n'))
+	fp.close()
+
+	index = createindex(dictionary)
+
 	stringcombinations =[]
 	for key in puzzlemap:
-		for s in createstring(puzzlemap,key):
+		for s in createstring(puzzlemap,key,dictionary,index):
 			stringcombinations.append(s)
-	return stringcombinations
+	results = list(set(stringcombinations))
+	results.sort(key=len,reverse=True)
+	return results
 
-
-def createstring(puzzlemap,startpoint):
-
-# a	c	b	r
-
-# t	h	e	n
-
-# e	f	d	t
-
-# b	r	j	s
-
-# acbrthenefdtbrjs
-	
-	#tracker = {step:[string,puzzlemap]}
+def createstring(puzzlemap,startpoint,dictionary,index):
 
 	step = 1
-	letter = puzzlemap[startpoint].keys()[0]
+	for key in puzzlemap[startpoint].keys(): letter = key
 	tracker={step:[letter,startpoint,removefromadjacentcells(puzzlemap,startpoint)]}
-	iterator = tracker.keys()
+	iterator = []
+	for key in tracker.keys():iterator.append(key)
 	for item in iterator:
 		string = tracker[item][0]
 		startpoint = tracker[item][1]
 		puzzle = tracker[item][2]
 		for coord in puzzle[startpoint][string[-1]]:
-			step+=1
-			iterator.append(step)
-			puzzlecopy = removefromadjacentcells(puzzle,coord)
-			nextletter = puzzlecopy[coord].keys()[0]
-			tracker[step]=[string+nextletter,coord,puzzlecopy]
-			print(string+nextletter)
-	return tracker
+			for key in puzzle[coord].keys(): nextletter = key
+
+			goodstart,completeword = checkdictionary(string+nextletter,dictionary,index)
+			if goodstart:
+				
+				step+=1
+				iterator.append(step)
+				puzzlecopy = removefromadjacentcells(puzzle,coord)
+				tracker[step]=[string+nextletter,coord,puzzlecopy]
+				if len(string+nextletter)>2 and completeword: 
+					
+					yield string+nextletter
 
 def removefromadjacentcells(puzzlemap,coordtoremove):
 
@@ -51,6 +56,23 @@ def removefromadjacentcells(puzzlemap,coordtoremove):
 		for letter in puzzlemap[cell]:
 			if coordtoremove in puzzlecopy[cell][letter]: puzzlecopy[cell][letter].remove(coordtoremove)
 	return puzzlecopy			
+
+def checkdictionary(string,dictionary,index):
+
+	if string in dictionary:
+		
+		return True,True
+
+	startline = index[string[0]][0]
+	endline = index[index[string[0]][1]][0]
+	for i,dictline in enumerate(dictionary):
+		if endline > i >= startline:
+			if dictline.startswith(string):
+				
+				return True,False
+
+	return False,False
+	
 
 
 def createpuzzlemap(string):
@@ -89,3 +111,22 @@ def createadjacentcells(coord):
 	for n in it.product(range(xrange[0],xrange[1]),range(yrange[0],yrange[1])):
 		if coord!=n: adjacentcells.append(n)
 	return adjacentcells
+
+def createindex(dictionarylist):
+	
+	alphabet='abcdefghijklmnopqrstuvwxyz'
+	letterindex=0
+	index={}
+	for i,line in enumerate(dictionarylist):
+		if letterindex<26:
+			if alphabet[letterindex]==line[0]:
+				if alphabet[letterindex]!='z': 
+					index[alphabet[letterindex]]=[i,alphabet[letterindex+1]]
+				else:
+					index[alphabet[letterindex]]=[i,'@']
+				letterindex+=1
+	index['@']=[i]
+
+	print('Index Created')
+
+	return index
