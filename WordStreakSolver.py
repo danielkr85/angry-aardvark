@@ -1,4 +1,5 @@
-import itertools as it,pdb,copy,io
+import itertools as it,pdb,copy,io,sys
+
 
 def solution(string):
 
@@ -24,6 +25,21 @@ def createstringcombinations(puzzlemap):
 	results.sort(key=len,reverse=True)
 	return results
 
+def rankresults(results):
+
+	lettervalues = {'a':1,'b':4,'c':4,'d':2,'e':1,'f':4,'g':2,'h':3,'i':1,'j':10,'k':3,'l':2,'m':4,'n':2,'o':1,'p':4,'q':8,'r':1,'s':1,'t':1,'u':2,'v':5,'w':4,'x':10,'y':10,'z':10}
+
+	newresults=[]
+	for word in results:
+		value = 0
+		for letter in word:
+			value = value + lettervalues[letter]
+		newresults.append([value,word])
+
+
+	return newresults
+
+
 def createstring(puzzlemap,startpoint,dictionary,index):
 
 	step = 1
@@ -33,10 +49,14 @@ def createstring(puzzlemap,startpoint,dictionary,index):
 	for key in tracker.keys():iterator.append(key)
 	for item in iterator:
 		string = tracker[item][0]
+		if string == 'q': string = 'qu'
 		startpoint = tracker[item][1]
 		puzzle = tracker[item][2]
 		for coord in puzzle[startpoint][string[-1]]:
-			for key in puzzle[coord].keys(): nextletter = key
+			for key in puzzle[coord].keys(): 
+
+				nextletter = key
+				if nextletter == 'q': nextletter = 'qu'
 
 			goodstart,completeword = checkdictionary(string+nextletter,dictionary,index)
 			if goodstart:
@@ -63,16 +83,20 @@ def checkdictionary(string,dictionary,index):
 		
 		return True,True
 
-	startline = index[string[0]][0]
-	endline = index[index[string[0]][1]][0]
-	for i,dictline in enumerate(dictionary):
-		if endline > i >= startline:
-			if dictline.startswith(string):
-				
-				return True,False
+	stringlength = len(string)
 
+	if stringlength >4: 
+		stringlength = 4
+	else: 
+		if string in index:
+			return True,False
+		else:
+			return False,False
+
+	for word in index[string[0:stringlength]]:
+		if word.startswith(string):
+			return True,False
 	return False,False
-	
 
 
 def createpuzzlemap(string):
@@ -114,19 +138,39 @@ def createadjacentcells(coord):
 
 def createindex(dictionarylist):
 	
-	alphabet='abcdefghijklmnopqrstuvwxyz'
-	letterindex=0
 	index={}
-	for i,line in enumerate(dictionarylist):
-		if letterindex<26:
-			if alphabet[letterindex]==line[0]:
-				if alphabet[letterindex]!='z': 
-					index[alphabet[letterindex]]=[i,alphabet[letterindex+1]]
-				else:
-					index[alphabet[letterindex]]=[i,'@']
-				letterindex+=1
-	index['@']=[i]
+	for line in dictionarylist:
+		if line[0] in index:
+			index[line[0]].append(line)
+		else:
+			index[line[0]]=[line]
+
+	for line in dictionarylist:
+		if line[0:2] in index:
+			index[line[0:2]].append(line)
+		else:
+			index[line[0:2]]=[line]
+
+	for line in dictionarylist:
+		if line[0:3] in index:
+			index[line[0:3]].append(line)
+		else:
+			index[line[0:3]]=[line]
+
+	for line in dictionarylist:
+		if line[0:4] in index:
+			index[line[0:4]].append(line)
+		else:
+			index[line[0:4]]=[line]
+
+	for line in dictionarylist:
+		if line[0:5] in index:
+			index[line[0:5]].append(line)
+		else:
+			index[line[0:5]]=[line]
 
 	print('Index Created')
 
 	return index
+
+solution(sys.argv[1])
